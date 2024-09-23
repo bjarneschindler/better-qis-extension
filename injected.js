@@ -164,13 +164,18 @@ function calculateGrade(requiredCredits) {
 	});
 
 	const modules = groupedModules.flatMap((m) => m.modules);
-	const avgWeightedGrade = modules.reduce((a, b) => a + b.weightedGrade, 0);
+	const avgGrade = Math.min(6, Math.max(1, modules.reduce((a, b) => a + b.weightedGrade, 0)));
 	const avgPoints = modules.reduce((a, b) => a + b.points, 0) / modules.length;
 	const totalCredits = groupedModules.reduce((a, b) => a + b.acquiredCredits, 0);
 
+	if (document.querySelector("#better-qis-extension-results")) {
+		document.querySelector("#better-qis-extension-results").remove()
+	}
+
 	const rowToInsert = getGradeTableElement().insertRow(-1);
+	rowToInsert.id = "better-qis-extension-results";
 	addCell(rowToInsert, "", 8);
-	addCell(rowToInsert, `∅ ${avgWeightedGrade.toFixed(2)}`);
+	addCell(rowToInsert, `∅ ${avgGrade.toFixed(2)}`);
 	addCell(rowToInsert, `∅ ${avgPoints.toFixed(2)}`);
 	addCell(rowToInsert, "");
 	addCell(rowToInsert, totalCredits.toFixed(2));
@@ -181,6 +186,8 @@ function calculateGrade(requiredCredits) {
 insertRequiredCreditsInput()
 
 const input = document.querySelector("#required_credits")
+input.closest("form").onsubmit = (e) => e.preventDefault()
+
 input.addEventListener("change", () => {
 	const requiredCredits = parseFloat(input.value)
 	if (isNaN(requiredCredits)) return
