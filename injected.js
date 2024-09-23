@@ -4,8 +4,8 @@
  * @returns {HTMLTableElement} The grade table element
  */
 function getGradeTableElement() {
-  const s = "#wrapper>div.divcontent>div.content>form>table:nth-child(5)";
-  return document.querySelector(s);
+	const s = "#wrapper>div.divcontent>div.content>form>table:nth-child(5)";
+	return document.querySelector(s);
 }
 
 /**
@@ -14,7 +14,7 @@ function getGradeTableElement() {
  * @returns {HTMLTableRowElement[]} The rows of the grade table
  */
 function getGradeTableRows() {
-  return [...getGradeTableElement().querySelectorAll("tr")].slice(1);
+	return [...getGradeTableElement().querySelectorAll("tr")].slice(1);
 }
 
 /**
@@ -30,8 +30,8 @@ function getGradeTableRows() {
  * @returns
  */
 function isModuleRow(row) {
-  if (!row.children || row.children.length != 12) return false;
-  return !isModulesHeaderRow(row) && row.children[6].innerText.trim() !== "";
+	if (!row.children || row.children.length != 12) return false;
+	return !isModulesHeaderRow(row) && row.children[6].innerText.trim() !== "";
 }
 
 /**
@@ -41,9 +41,9 @@ function isModuleRow(row) {
  * @param {HTMLTableRowElement} row The row to check
  */
 function isModulesHeaderRow(row) {
-  if (!row.children || row.children.length < 1) return false;
-  const id = parseInt(row.children[0].innerText.trim());
-  return [100, 300, 400, 80000].includes(id);
+	if (!row.children || row.children.length < 1) return false;
+	const id = parseInt(row.children[0].innerText.trim());
+	return [100, 300, 400, 80000].includes(id);
 }
 
 /**
@@ -54,11 +54,11 @@ function isModulesHeaderRow(row) {
  * @param {number} colSpan The number of columns the cell should span
  */
 function addCell(row, text, colSpan = 1) {
-  const cell = document.createElement("td");
-  cell.className = `nowrap qis_kontoOnTop`;
-  cell.colSpan = `${colSpan}`;
-  cell.innerText = text;
-  row.appendChild(cell);
+	const cell = document.createElement("td");
+	cell.className = `nowrap qis_kontoOnTop`;
+	cell.colSpan = `${colSpan}`;
+	cell.innerText = text;
+	row.appendChild(cell);
 }
 
 /**
@@ -68,25 +68,25 @@ function addCell(row, text, colSpan = 1) {
  * @returns
  */
 function parseModuleRow(row) {
-  let id = parseInt(row.children[0].innerText.trim());
-  let name = row.children[1].innerText.trim();
+	let id = parseInt(row.children[0].innerText.trim());
+	let name = row.children[1].innerText.trim();
 
-  let grade = parseFloat(row.children[6].innerText.trim().replace(",", "."));
-  if (isNaN(grade)) grade = 0;
+	let grade = parseFloat(row.children[6].innerText.trim().replace(",", "."));
+	if (isNaN(grade)) grade = 0;
 
-  let points = parseFloat(row.children[7].innerText.trim().replace(",", "."));
-  if (isNaN(points)) points = 0;
+	let points = parseFloat(row.children[7].innerText.trim().replace(",", "."));
+	if (isNaN(points)) points = 0;
 
-  let credits = parseFloat(row.children[9].innerText.trim().replace(",", "."));
-  if (isNaN(credits)) credits = 0;
+	let credits = parseFloat(row.children[9].innerText.trim().replace(",", "."));
+	if (isNaN(credits)) credits = 0;
 
-  return {
-    id: row.children[0].innerText.trim(),
-    name: row.children[1].innerText.trim(),
-    grade,
-    points,
-    credits,
-  };
+	return {
+		id,
+		name,
+		grade,
+		points,
+		credits,
+	};
 }
 
 /**
@@ -96,13 +96,13 @@ function parseModuleRow(row) {
  * @returns
  */
 function parseModuleHeaderRow(row) {
-  let id = parseInt(row.children[0].innerText.trim());
-  let name = row.children[1].innerText.trim();
-  let acquiredCredits = parseFloat(
-    row.children[9].innerText.trim().replace(",", ".")
-  );
+	let id = parseInt(row.children[0].innerText.trim());
+	let name = row.children[1].innerText.trim();
+	let acquiredCredits = parseFloat(
+		row.children[9].innerText.trim().replace(",", "."),
+	);
 
-  return { id, name, acquiredCredits, modules: [] };
+	return { id, name, acquiredCredits, modules: [] };
 }
 
 /**
@@ -112,37 +112,83 @@ function parseModuleHeaderRow(row) {
  * @returns
  */
 function getGroupedModules() {
-  const tableRows = getGradeTableRows();
-  const modules = [];
-  for (let i = 0; i < tableRows.length; i++) {
-    if (isModulesHeaderRow(tableRows[i])) {
-      const moduleHeader = parseModuleHeaderRow(tableRows[i]);
-      for (let j = i + 1; j < tableRows.length; j++) {
-        if (isModulesHeaderRow(tableRows[j])) {
-          i = j - 1;
-          break;
-        }
-        if (isModuleRow(tableRows[j])) {
-          moduleHeader.modules.push(parseModuleRow(tableRows[j]));
-        }
-      }
-      modules.push(moduleHeader);
-    }
-  }
-  return modules;
+	const tableRows = getGradeTableRows();
+	const modules = [];
+	for (let i = 0; i < tableRows.length; i++) {
+		if (isModulesHeaderRow(tableRows[i])) {
+			const moduleHeader = parseModuleHeaderRow(tableRows[i]);
+			for (let j = i + 1; j < tableRows.length; j++) {
+				if (isModulesHeaderRow(tableRows[j])) {
+					i = j - 1;
+					break;
+				}
+				if (isModuleRow(tableRows[j])) {
+					moduleHeader.modules.push(parseModuleRow(tableRows[j]));
+				}
+			}
+			modules.push(moduleHeader);
+		}
+	}
+	return modules;
 }
 
-const groupedModules = getGroupedModules();
-const modules = groupedModules.flatMap((m) => m.modules);
-const avgGrade = modules.reduce((a, b) => a + b.grade, 0) / modules.length;
-const avgPoints = modules.reduce((a, b) => a + b.points, 0) / modules.length;
-const totalCredits = groupedModules.reduce((a, b) => a + b.acquiredCredits, 0);
 
-const rowToInsert = getGradeTableElement().insertRow(-1);
-addCell(rowToInsert, "", 8);
-addCell(rowToInsert, `∅ ${avgGrade.toFixed(2)}`);
-addCell(rowToInsert, `∅ ${avgPoints.toFixed(2)}`);
-addCell(rowToInsert, "");
-addCell(rowToInsert, totalCredits.toFixed(2));
+function insertRequiredCreditsInput() {
+	const tbody = document.querySelector("#wrapper > div.divcontent > div.content > form > table:nth-child(2) > tbody")
+	// Copy the last row
+	const lastRow = tbody.children[tbody.children.length - 1]
+	const newRow = lastRow.cloneNode(true)
 
-for (let i = 0; i < 2; i++) addCell(rowToInsert, "");
+	const input = document.createElement("input")
+	input.type = "number"
+	input.id = "required_credits"
+
+	newRow.children[0].innerText = "Benötigte ECTS laut PO"
+	newRow.children[1].innerText = ""
+	newRow.children[1].appendChild(input)
+
+	tbody.appendChild(newRow)
+}
+
+function calculateGrade(requiredCredits) {
+	const groupedModules = getGroupedModules();
+
+	groupedModules.forEach((m) => {
+		m.modules.forEach((module) => {
+			const weigth = module.credits / requiredCredits
+			const weightedGrade = module.grade * weigth
+			const weightedPoints = module.points * weigth
+			module.weightedGrade = weightedGrade
+			module.weightedPoints = weightedPoints
+		});
+	});
+
+	const modules = groupedModules.flatMap((m) => m.modules);
+	const avgWeightedGrade = modules.reduce((a, b) => a + b.weightedGrade, 0);
+	const avgPoints = modules.reduce((a, b) => a + b.points, 0) / modules.length;
+	const totalCredits = groupedModules.reduce((a, b) => a + b.acquiredCredits, 0);
+
+	const rowToInsert = getGradeTableElement().insertRow(-1);
+	addCell(rowToInsert, "", 8);
+	addCell(rowToInsert, `∅ ${avgWeightedGrade.toFixed(2)}`);
+	addCell(rowToInsert, `∅ ${avgPoints.toFixed(2)}`);
+	addCell(rowToInsert, "");
+	addCell(rowToInsert, totalCredits.toFixed(2));
+
+	for (let i = 0; i < 2; i++) addCell(rowToInsert, "");
+}
+
+insertRequiredCreditsInput()
+
+const input = document.querySelector("#required_credits")
+input.addEventListener("change", () => {
+	const requiredCredits = parseFloat(input.value)
+	if (isNaN(requiredCredits)) return
+	calculateGrade(requiredCredits)
+	localStorage.setItem("requiredCredits", requiredCredits)
+})
+
+if (localStorage.getItem("requiredCredits")) {
+	input.value = localStorage.getItem("requiredCredits")
+	calculateGrade(parseFloat(input.value))
+}
