@@ -152,10 +152,11 @@ function insertRequiredCreditsInput() {
 
 function calculateGrade(requiredCredits) {
 	const groupedModules = getGroupedModules();
+	const totalCredits = groupedModules.reduce((a, b) => a + b.acquiredCredits, 0);
 
 	groupedModules.forEach((m) => {
 		m.modules.forEach((module) => {
-			const weigth = module.credits / requiredCredits
+			const weigth = module.credits / totalCredits
 			const weightedGrade = module.grade * weigth
 			const weightedPoints = module.points * weigth
 			module.weightedGrade = weightedGrade
@@ -166,7 +167,6 @@ function calculateGrade(requiredCredits) {
 	const modules = groupedModules.flatMap((m) => m.modules);
 	const avgGrade = Math.min(6, Math.max(1, modules.reduce((a, b) => a + b.weightedGrade, 0)));
 	const avgPoints = modules.reduce((a, b) => a + b.points, 0) / modules.length;
-	const totalCredits = groupedModules.reduce((a, b) => a + b.acquiredCredits, 0);
 
 	if (document.querySelector("#better-qis-extension-results")) {
 		document.querySelector("#better-qis-extension-results").remove()
@@ -183,19 +183,7 @@ function calculateGrade(requiredCredits) {
 	for (let i = 0; i < 2; i++) addCell(rowToInsert, "");
 }
 
-insertRequiredCreditsInput()
+calculateGrade()
 
-const input = document.querySelector("#required_credits")
-input.closest("form").onsubmit = (e) => e.preventDefault()
+calculateGrade()
 
-input.addEventListener("change", () => {
-	const requiredCredits = parseFloat(input.value)
-	if (isNaN(requiredCredits)) return
-	calculateGrade(requiredCredits)
-	localStorage.setItem("requiredCredits", requiredCredits)
-})
-
-if (localStorage.getItem("requiredCredits")) {
-	input.value = localStorage.getItem("requiredCredits")
-	calculateGrade(parseFloat(input.value))
-}
